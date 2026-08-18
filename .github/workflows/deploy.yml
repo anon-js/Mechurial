@@ -36,13 +36,20 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Assemble standalone bundle
+        run: |
+          mkdir -p deploy
+          cp -r .next/standalone/. deploy/
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/static
+          cp -r public deploy/public
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: next-build
-          path: |
-            .next
-            public
+          name: deploy-bundle
+          path: deploy
+          include-hidden-files: true
           retention-days: 1
 
   # 2) 배포 — verify 통과 + main push일 때만
@@ -57,18 +64,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v7
         with:
-          name: next-build
-          path: .
-
-      - name: Assemble standalone bundle
-        run: |
-          mkdir -p deploy
-          cp -r .next/standalone/. deploy/
-          mkdir -p deploy/.next
-          cp -r .next/static deploy/.next/static
-          cp -r public deploy/public
+          name: deploy-bundle
+          path: deploy
 
       - name: Deploy to server via rsync
         uses: burnett01/rsync-deployments@v9
