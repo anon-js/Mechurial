@@ -1,26 +1,16 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  --color-brand: #6b5b45; /* 메인 브라운 (버튼) */
+  --color-brand-light: #a79071; /* 로고 라이트 브라운 */
+  --color-gray-50: #f5f5f7; /* 메인 라이트 배경 */
+  --color-gray-100: #e5e6eb; /* 세컨더리 배경, 카드 분할 */
+  --color-gray-200: #ccd0db; /* 일반 경계선, border */
+  --color-gray-300: #9ca1b0; /* 비활성화 텍스트, 플레이스홀더 */
+  --color-gray-400: #6b7080; /* 보조 텍스트 */
+  --color-gray-500: #525663; /* 일반 본문 텍스트 */
+  --color-gray-600: #41444f; /* 서브 타이틀, 굵은 본문 */
+  --color-gray-700: #31333b; /* 컴포넌트 제목 */
+  --color-gray-800: #24252a; /* 진한 제목 텍스트 */
+  --color-gray-900: #1d1d1f; /* 메인 헤딩 */
 }
