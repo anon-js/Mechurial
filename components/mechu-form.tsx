@@ -9,7 +9,7 @@ import {
   MEAL_TIMES,
   getDefaultMealTime,
   type MealTime,
-} from '@/constants/meal-time';
+} from '@/constants/meal-times';
 
 export default function MechuForm() {
   const [mealTime, setMealTime] = useState<MealTime>(getDefaultMealTime);
