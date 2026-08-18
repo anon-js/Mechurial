@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   description: '선택이 어려운 당신을 위해',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ko">
       <body className="min-h-screen flex flex-col">
