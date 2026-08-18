@@ -14,12 +14,14 @@ import {
 const emptySubscribe = () => () => {};
 
 export default function MechuForm() {
-  const mealTimeInitial = useSyncExternalStore(
+  const defaultMealTime = useSyncExternalStore(
     emptySubscribe,
     () => getDefaultMealTime(),
     () => 'breakfast' as MealTime,
   );
-  const [mealTime, setMealTime] = useState<MealTime>(mealTimeInitial);
+  const [selected, setSelected] = useState<MealTime | null>(null);
+
+  const mealTime = selected ?? defaultMealTime;
 
   const foods = mealTime === 'snack' ? SNACKS : FOODS;
 
@@ -32,7 +34,7 @@ export default function MechuForm() {
           name="mealTime"
           aria-label="식사 시간대를 선택해 주세요."
           value={mealTime}
-          onChange={(e) => setMealTime(e.target.value as MealTime)}
+          onChange={(e) => setSelected(e.target.value as MealTime)}
         >
           {MEAL_TIMES.map(({ value, label }) => (
             <option key={value} value={value}>
