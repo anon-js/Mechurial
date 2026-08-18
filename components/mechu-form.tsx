@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 
 import { FoodRoulette } from '@/components/ui/food-roulette';
 import { Select } from '@/components/ui/select';
@@ -11,8 +11,15 @@ import {
   type MealTime,
 } from '@/constants/meal-times';
 
+const emptySubscribe = () => () => {};
+
 export default function MechuForm() {
-  const [mealTime, setMealTime] = useState<MealTime>(getDefaultMealTime);
+  const mealTimeInitial = useSyncExternalStore(
+    emptySubscribe,
+    () => getDefaultMealTime(),
+    () => 'breakfast' as MealTime,
+  );
+  const [mealTime, setMealTime] = useState<MealTime>(mealTimeInitial);
 
   const foods = mealTime === 'snack' ? SNACKS : FOODS;
 
