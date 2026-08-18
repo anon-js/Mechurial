@@ -4,13 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
 concurrency:
   group: cicd-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  # 1) 검사 — 린트 → 타입 체크 → 테스트 → 빌드
+  # 1) 검사 — 린트 → 타입 체크 → 테스트 → 빌드 → 번들 조립·검증
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -44,6 +45,15 @@ jobs:
           cp -r .next/static deploy/.next/static
           cp -r public deploy/public
 
+      # 번들이 온전한지 검증 — 불완전하면 여기서 실패시켜 rsync --delete로 서버가 깨지는 걸 막는다
+      - name: Verify bundle integrity
+        run: |
+          test -f deploy/server.js || { echo "❌ server.js 없음"; exit 1; }
+          test -d deploy/node_modules/next || { echo "❌ next 모듈 없음"; exit 1; }
+          test -f deploy/node_modules/@swc/helpers/package.json || { echo "❌ @swc/helpers 없음"; exit 1; }
+          test -d deploy/.next/static || { echo "❌ .next/static 없음"; exit 1; }
+          echo "✓ 번들 검증 통과"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
@@ -61,8 +71,6 @@ jobs:
       group: deploy-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v7
-
       - name: Download build artifact
         uses: actions/download-artifact@v7
         with:
@@ -86,7 +94,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          port: ${{ secrets. PORT }}
+          port: ${{ secrets.PORT }}
           command_timeout: 5m
           script: |
             export PATH=$HOME/.nvm/versions/node/v22.22.0/bin:$PATH
