@@ -1,26 +1,22 @@
-name: Deploy qnon.kr/mechu Production
+name: CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
 
 concurrency:
-  group: deploy-mechu-production
+  group: cicd-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # 1) 검사 — 린트 → 타입 체크 → 테스트 → 빌드
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22.22.0
           cache: pnpm
@@ -28,8 +24,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: next-build
+          path: |
+            .next
+            public
+          retention-days: 1
+
+  # 2) 배포 — verify 통과 + main push일 때만
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: next-build
+          path: .
 
       - name: Assemble standalone bundle
         run: |
@@ -56,7 +87,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
+          port: ${{ secrets. PORT }}
           command_timeout: 5m
           script: |
             export PATH=$HOME/.nvm/versions/node/v22.22.0/bin:$PATH
