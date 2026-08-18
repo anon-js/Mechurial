@@ -1,0 +1,83 @@
+name: Deploy qnon.kr/mechu Production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-mechu-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Assemble standalone bundle
+        run: |
+          mkdir -p deploy
+          cp -r .next/standalone/. deploy/
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/static
+          cp -r public deploy/public
+
+      - name: Deploy to server via rsync
+        uses: burnett01/rsync-deployments@v9
+        with:
+          switches: -avzr --delete
+          path: deploy/
+          remote_path: ~/htdocs/qnon-mechu/
+          remote_host: ${{ secrets.HOST }}
+          remote_user: ${{ secrets.USERNAME }}
+          remote_port: ${{ secrets.PORT }}
+          remote_key: ${{ secrets.KEY }}
+
+      - name: Restart and health check
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          command_timeout: 5m
+          script: |
+            export PATH=$HOME/.nvm/versions/node/v22.22.0/bin:$PATH
+            cd ~/htdocs/qnon-mechu
+            if pm2 describe qnon-mechu > /dev/null 2>&1; then
+              echo "> Reloading server..."
+              pm2 reload qnon-mechu --update-env
+            else
+              echo "> Starting server fresh..."
+              PORT=3003 pm2 start server.js --name "qnon-mechu"
+            fi
+            echo "> Waiting for server to come up..."
+            sleep 3
+            echo "> Health check on localhost:3003..."
+            for i in 1 2 3 4 5; do
+              if curl -fsS http://localhost:3003/mechu > /dev/null; then
+                echo "> Health check passed."
+                exit 0
+              fi
+              echo "  attempt $i failed, retrying in 3s..."
+              sleep 3
+            done
+            echo "> Health check FAILED after retries."
+            exit 1
