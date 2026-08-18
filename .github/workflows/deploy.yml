@@ -44,7 +44,7 @@ jobs:
         with:
           switches: -avzr --delete
           path: deploy/
-          remote_path: ~/htdocs/qnon-mechu/
+          remote_path: ~/htdocs/mechurial/
           remote_host: ${{ secrets.HOST }}
           remote_user: ${{ secrets.USERNAME }}
           remote_port: ${{ secrets.PORT }}
@@ -60,16 +60,19 @@ jobs:
           command_timeout: 5m
           script: |
             export PATH=$HOME/.nvm/versions/node/v22.22.0/bin:$PATH
-            cd ~/htdocs/qnon-mechu
-            if pm2 describe qnon-mechu > /dev/null 2>&1; then
+            cd ~/htdocs/mechurial
+
+            if pm2 describe mechurial > /dev/null 2>&1; then
               echo "> Reloading server..."
-              pm2 reload qnon-mechu --update-env
+              pm2 reload mechurial --update-env
             else
               echo "> Starting server fresh..."
-              PORT=3003 pm2 start server.js --name "qnon-mechu"
+              PORT=3003 pm2 start server.js --name "mechurial"
             fi
+
             echo "> Waiting for server to come up..."
             sleep 3
+
             echo "> Health check on localhost:3003..."
             for i in 1 2 3 4 5; do
               if curl -fsS http://localhost:3003/mechu > /dev/null; then
@@ -79,5 +82,6 @@ jobs:
               echo "  attempt $i failed, retrying in 3s..."
               sleep 3
             done
+
             echo "> Health check FAILED after retries."
             exit 1
