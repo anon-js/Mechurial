@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
   basePath: '/mechu',
   poweredByHeader: false,
   reactStrictMode: true,
-
-  outputFileTracingIncludes: {
-    '/**/*': ['./node_modules/@swc/helpers/**/*'],
-  },
 };
 
 export default nextConfig;
