@@ -3,3 +3,8 @@ nodeLinker: hoisted
 allowBuilds:
   sharp: true
   unrs-resolver: true
+
+overrides:
+  typescript: '5.9.3'
+  eslint: '9.39.5'
+  '@types/node': '22.20.1'
